@@ -1,0 +1,64 @@
+# =============================================================================
+# AMAZON LINUX 2023 + NGINX PLAYBOOK
+# For: t3.micro (ens5 interface), yum-based systems, localhost execution
+# Installs: Nginx webserver with static content via Ansible templates
+# =============================================================================
+
+---
+  - name: Play for Install Nginx on WebServers
+    hosts: localhost
+    gather_facts: yes
+    vars:
+      custom_heading: "Welcome To Autoscaling Testing by Saikiran Pinapathruni"
+      todays_date: "{{ ansible_facts['date_time']['date'] }}"
+      host_name: "{{ ansible_facts['hostname'] }}"
+      fqdn_name: "{{ ansible_facts['fqdn'] | default('N/A') }}"
+      ip_address: "{{ ansible_facts['default_ipv4']['address'] | default('N/A') }}"
+    tasks:
+       - name: Run Yum Update
+         yum:
+           name: "*"
+           state: latest
+
+       - name: Install Nginx Server
+         yum:
+           name: nginx
+           state: present
+
+       - name: Create nginx html directory
+         file:
+           path: /usr/share/nginx/html
+           state: directory
+           owner: root
+           group: root
+           mode: '0755'
+
+       - name: Copy the files to index destination folder.
+         template: >
+            src=/myrepo/index.j2
+            dest=/usr/share/nginx/html/index.html
+            owner=root
+            group=root
+            mode=0644
+
+       - name: Copy the style files to destination folder.
+         copy: >
+            src=/myrepo/style.css
+            dest=/usr/share/nginx/html/style.css
+            owner=root
+            group=root
+            mode=0644
+
+       - name: Copy the javascript files to destination folder.
+         copy: >
+            src=/myrepo/scorekeeper.js
+            dest=/usr/share/nginx/html/scorekeeper.js
+            owner=root
+            group=root
+            mode=0644
+
+       - name: Start and enable nginx
+         systemd:
+           name: nginx
+           state: started
+           enabled: yes
