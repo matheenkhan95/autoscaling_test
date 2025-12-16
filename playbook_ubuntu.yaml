@@ -1,0 +1,57 @@
+---
+- name: Install and Configure Nginx on localhost
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: yes
+
+  vars:
+    custom_heading: "Welcome To Autoscaling Testing by Saikiran Pinapathruni"
+    todays_date: "{{ ansible_facts.date_time.date }}"
+    host_name: "{{ ansible_facts.hostname }}"
+    fqdn_name: "{{ ansible_facts.fqdn }}"
+    ip_address: "{{ ansible_default_ipv4.address }}"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Ensure python3-apt is installed
+      apt:
+        name: python3-apt
+        state: present
+
+    - name: Install Nginx Server
+      apt:
+        name: nginx
+        state: present
+
+    - name: Copy index file
+      template:
+        src: /myrepo/index.j2
+        dest: /var/www/html/index.nginx-debian.html
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy CSS file
+      copy:
+        src: /myrepo/style.css
+        dest: /var/www/html/style.css
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy JavaScript file
+      copy:
+        src: /myrepo/scorekeeper.js
+        dest: /var/www/html/scorekeeper.js
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
